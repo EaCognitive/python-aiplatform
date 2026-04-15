@@ -16,7 +16,7 @@
 
 import asyncio
 import datetime
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 import uuid
 
 import google.auth.credentials
@@ -32,17 +32,6 @@ _DEFAULT_BQ_DATASET_PREFIX = "vertex_datasets"
 _DEFAULT_BQ_TABLE_PREFIX = "multimodal_dataset"
 
 T = TypeVar("T", bound=BaseModel)
-
-
-def create_from_response(model_type: Type[T], response: dict[str, Any]) -> T:
-    """Creates a model from a response."""
-    model_field_names = model_type.model_fields.keys()
-    filtered_response = {}
-    for key, value in response.items():
-        snake_key = common.camel_to_snake(key)
-        if snake_key in model_field_names:
-            filtered_response[snake_key] = value
-    return model_type(**filtered_response)
 
 
 def validate_multimodal_dataset_bigquery_uri(

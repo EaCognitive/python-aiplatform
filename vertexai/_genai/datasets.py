@@ -908,14 +908,18 @@ class Datasets(_api_module.BaseModule):
     def create_from_bigquery(
         self,
         *,
-        multimodal_dataset: types.MultimodalDatasetOrDict,
+        bigquery_uri: Optional[str] = None,
+        multimodal_dataset: Optional[types.MultimodalDatasetOrDict] = None,
         config: Optional[types.CreateMultimodalDatasetConfigOrDict] = None,
     ) -> types.MultimodalDataset:
         """Creates a multimodal dataset from a BigQuery table.
 
         Args:
+          bigquery_uri:
+            Optional. The BigQuery URI of the table to create the dataset from.
+            e.g. "bq://project.dataset.table".
           multimodal_dataset:
-            Required. A representation of a multimodal dataset.
+            Optional. A representation of a multimodal dataset.
           config:
             Optional. A configuration for creating the multimodal dataset. If not
             provided, the default configuration will be used.
@@ -923,8 +927,15 @@ class Datasets(_api_module.BaseModule):
         Returns:
           A types.MultimodalDataset object representing a multimodal dataset.
         """
-        if isinstance(multimodal_dataset, dict):
+        if multimodal_dataset is None:
+            multimodal_dataset = types.MultimodalDataset()
+        elif isinstance(multimodal_dataset, dict):
             multimodal_dataset = types.MultimodalDataset(**multimodal_dataset)
+
+        if bigquery_uri:
+            multimodal_dataset = multimodal_dataset.model_copy(deep=True)
+            multimodal_dataset.set_bigquery_uri(bigquery_uri)
+
         _datasets_utils.validate_multimodal_dataset_bigquery_uri(multimodal_dataset)
 
         if isinstance(config, dict):
@@ -947,7 +958,24 @@ class Datasets(_api_module.BaseModule):
             operation=multimodal_dataset_operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(types.MultimodalDataset, response)
+        return types.MultimodalDataset._from_response(
+            response=response,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
+        )
 
     def create_from_pandas(
         self,
@@ -1267,9 +1295,23 @@ class Datasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningResourceUsageAssessmentResult,
-            response["tuningResourceUsageAssessmentResult"],
+        return types.TuningResourceUsageAssessmentResult._from_response(
+            response=response["tuningResourceUsageAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     def assess_tuning_validity(
@@ -1329,9 +1371,23 @@ class Datasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningValidationAssessmentResult,
-            response["tuningValidationAssessmentResult"],
+        return types.TuningValidationAssessmentResult._from_response(
+            response=response["tuningValidationAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     def assess_batch_prediction_resources(
@@ -1389,8 +1445,23 @@ class Datasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionResourceUsageAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionResourceUsageAssessmentResult, result
+        return types.BatchPredictionResourceUsageAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     def assess_batch_prediction_validity(
@@ -1448,8 +1519,23 @@ class Datasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionValidationAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionValidationAssessmentResult, result
+        return types.BatchPredictionValidationAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
 
@@ -2132,14 +2218,18 @@ class AsyncDatasets(_api_module.BaseModule):
     async def create_from_bigquery(
         self,
         *,
-        multimodal_dataset: types.MultimodalDatasetOrDict,
+        bigquery_uri: Optional[str] = None,
+        multimodal_dataset: Optional[types.MultimodalDatasetOrDict] = None,
         config: Optional[types.CreateMultimodalDatasetConfigOrDict] = None,
     ) -> types.MultimodalDataset:
         """Creates a multimodal dataset from a BigQuery table.
 
         Args:
+          bigquery_uri:
+            Optional. The BigQuery URI of the table to create the dataset from.
+            e.g. "bq://project.dataset.table".
           multimodal_dataset:
-            Required. A representation of a multimodal dataset.
+            Optional. A representation of a multimodal dataset.
           config:
             Optional. A configuration for creating the multimodal dataset. If not
             provided, the default configuration will be used.
@@ -2147,8 +2237,15 @@ class AsyncDatasets(_api_module.BaseModule):
         Returns:
           A types.MultimodalDataset object representing a multimodal dataset.
         """
-        if isinstance(multimodal_dataset, dict):
+        if multimodal_dataset is None:
+            multimodal_dataset = types.MultimodalDataset()
+        elif isinstance(multimodal_dataset, dict):
             multimodal_dataset = types.MultimodalDataset(**multimodal_dataset)
+
+        if bigquery_uri:
+            multimodal_dataset = multimodal_dataset.model_copy(deep=True)
+            multimodal_dataset.set_bigquery_uri(bigquery_uri)
+
         _datasets_utils.validate_multimodal_dataset_bigquery_uri(multimodal_dataset)
 
         if isinstance(config, dict):
@@ -2171,7 +2268,24 @@ class AsyncDatasets(_api_module.BaseModule):
             operation=multimodal_dataset_operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(types.MultimodalDataset, response)
+        return types.MultimodalDataset._from_response(
+            response=response,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
+        )
 
     async def create_from_pandas(
         self,
@@ -2489,9 +2603,23 @@ class AsyncDatasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningResourceUsageAssessmentResult,
-            response["tuningResourceUsageAssessmentResult"],
+        return types.TuningResourceUsageAssessmentResult._from_response(
+            response=response["tuningResourceUsageAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     async def assess_tuning_validity(
@@ -2551,9 +2679,23 @@ class AsyncDatasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningValidationAssessmentResult,
-            response["tuningValidationAssessmentResult"],
+        return types.TuningValidationAssessmentResult._from_response(
+            response=response["tuningValidationAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     async def assess_batch_prediction_resources(
@@ -2611,8 +2753,23 @@ class AsyncDatasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionResourceUsageAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionResourceUsageAssessmentResult, result
+        return types.BatchPredictionResourceUsageAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     async def assess_batch_prediction_validity(
@@ -2670,6 +2827,21 @@ class AsyncDatasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionValidationAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionValidationAssessmentResult, result
+        return types.BatchPredictionValidationAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
