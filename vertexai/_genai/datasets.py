@@ -947,7 +947,24 @@ class Datasets(_api_module.BaseModule):
             operation=multimodal_dataset_operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(types.MultimodalDataset, response)
+        return types.MultimodalDataset._from_response(
+            response=response,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
+        )
 
     def create_from_pandas(
         self,
@@ -1267,9 +1284,23 @@ class Datasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningResourceUsageAssessmentResult,
-            response["tuningResourceUsageAssessmentResult"],
+        return types.TuningResourceUsageAssessmentResult._from_response(
+            response=response["tuningResourceUsageAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     def assess_tuning_validity(
@@ -1329,9 +1360,23 @@ class Datasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningValidationAssessmentResult,
-            response["tuningValidationAssessmentResult"],
+        return types.TuningValidationAssessmentResult._from_response(
+            response=response["tuningValidationAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     def assess_batch_prediction_resources(
@@ -1389,8 +1434,23 @@ class Datasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionResourceUsageAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionResourceUsageAssessmentResult, result
+        return types.BatchPredictionResourceUsageAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     def assess_batch_prediction_validity(
@@ -1448,8 +1508,23 @@ class Datasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionValidationAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionValidationAssessmentResult, result
+        return types.BatchPredictionValidationAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
 
@@ -2171,7 +2246,24 @@ class AsyncDatasets(_api_module.BaseModule):
             operation=multimodal_dataset_operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(types.MultimodalDataset, response)
+        return types.MultimodalDataset._from_response(
+            response=response,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
+        )
 
     async def create_from_pandas(
         self,
@@ -2489,9 +2581,23 @@ class AsyncDatasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningResourceUsageAssessmentResult,
-            response["tuningResourceUsageAssessmentResult"],
+        return types.TuningResourceUsageAssessmentResult._from_response(
+            response=response["tuningResourceUsageAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     async def assess_tuning_validity(
@@ -2551,9 +2657,23 @@ class AsyncDatasets(_api_module.BaseModule):
             operation=operation,
             timeout_seconds=config.timeout,
         )
-        return _datasets_utils.create_from_response(
-            types.TuningValidationAssessmentResult,
-            response["tuningValidationAssessmentResult"],
+        return types.TuningValidationAssessmentResult._from_response(
+            response=response["tuningValidationAssessmentResult"],
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     async def assess_batch_prediction_resources(
@@ -2611,8 +2731,23 @@ class AsyncDatasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionResourceUsageAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionResourceUsageAssessmentResult, result
+        return types.BatchPredictionResourceUsageAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
 
     async def assess_batch_prediction_validity(
@@ -2670,6 +2805,21 @@ class AsyncDatasets(_api_module.BaseModule):
             timeout_seconds=config.timeout,
         )
         result = response["batchPredictionValidationAssessmentResult"]
-        return _datasets_utils.create_from_response(
-            types.BatchPredictionValidationAssessmentResult, result
+        return types.BatchPredictionValidationAssessmentResult._from_response(
+            response=result,
+            kwargs=(
+                {
+                    "config": {
+                        "response_schema": getattr(config, "response_schema", None),
+                        "response_json_schema": getattr(
+                            config, "response_json_schema", None
+                        ),
+                        "include_all_fields": getattr(
+                            config, "include_all_fields", None
+                        ),
+                    }
+                }
+                if config
+                else {}
+            ),
         )
