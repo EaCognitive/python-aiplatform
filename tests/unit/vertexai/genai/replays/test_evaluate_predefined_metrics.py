@@ -415,6 +415,137 @@ def test_evaluation_gecko_text2video_metric(client):
         assert case_result.response_candidate_results is not None
 
 
+def test_single_turn_rubric_metrics(client):
+    """Tests single-turn text quality RubricMetrics with reference."""
+    prompts_df = pd.DataFrame(
+        {
+            "prompt": ["Summarize the benefits of regular exercise."],
+            "response": [
+                "Exercise improves cardiovascular health, boosts mood through"
+                " endorphin release, strengthens muscles and bones, and enhances"
+                " sleep quality. Regular physical activity also helps maintain a"
+                " healthy weight and reduces the risk of chronic diseases."
+            ],
+            "reference": [
+                "Exercise improves heart health, mood, muscle strength," " and sleep."
+            ],
+            "context": [
+                "Exercise improves heart health, mood, muscle strength," " and sleep."
+            ],
+        }
+    )
+
+    eval_dataset = types.EvaluationDataset(
+        eval_dataset_df=prompts_df,
+        candidate_name="gemini-2.5-flash",
+    )
+
+    predefined_metrics = [
+        types.RubricMetric.INSTRUCTION_FOLLOWING,
+        types.RubricMetric.GENERAL_QUALITY,
+        types.RubricMetric.TEXT_QUALITY,
+        types.RubricMetric.GROUNDING,
+        types.RubricMetric.SAFETY,
+        types.RubricMetric.FINAL_RESPONSE_MATCH,
+        types.RubricMetric.FINAL_RESPONSE_REFERENCE_FREE,
+    ]
+
+    evaluation_result = client.evals.evaluate(
+        dataset=eval_dataset,
+        metrics=predefined_metrics,
+    )
+
+    assert isinstance(evaluation_result, types.EvaluationResult)
+    assert evaluation_result.summary_metrics is not None
+    assert len(evaluation_result.summary_metrics) > 0
+    for summary in evaluation_result.summary_metrics:
+        assert isinstance(summary, types.AggregatedMetricResult)
+        assert summary.metric_name is not None
+
+    assert evaluation_result.eval_case_results is not None
+    assert len(evaluation_result.eval_case_results) > 0
+    for case_result in evaluation_result.eval_case_results:
+        assert isinstance(case_result, types.EvalCaseResult)
+        assert case_result.eval_case_index is not None
+        assert case_result.response_candidate_results is not None
+
+
+def test_multi_turn_additional_chat_metrics(client):
+    """Tests additional multi-turn chat quality metrics."""
+    prompts_data = {
+        "request": [
+            {
+                "contents": [
+                    {
+                        "parts": [
+                            {
+                                "text": (
+                                    "I need to book a flight to NYC for next" " Monday."
+                                )
+                            }
+                        ],
+                        "role": "user",
+                    },
+                    {
+                        "parts": [
+                            {
+                                "text": (
+                                    "I found flight UA100 to NYC for $300."
+                                    " Would you like to book it?"
+                                )
+                            }
+                        ],
+                        "role": "model",
+                    },
+                    {
+                        "parts": [
+                            {"text": ("Yes, book that. I also need a hotel" " in NYC.")}
+                        ],
+                        "role": "user",
+                    },
+                ]
+            },
+        ],
+        "response": [
+            (
+                "I recommend the Central Park Hotel, rated 4.5 stars."
+                " Shall I book it for you?"
+            ),
+        ],
+    }
+
+    prompts_df = pd.DataFrame(prompts_data)
+
+    eval_dataset = types.EvaluationDataset(
+        eval_dataset_df=prompts_df,
+        candidate_name="gemini-2.5-flash",
+    )
+
+    predefined_metrics = [
+        types.RubricMetric.MULTI_TURN_TEXT_QUALITY,
+        types.RubricMetric.MULTI_TURN_GENERAL_QUALITY,
+    ]
+
+    evaluation_result = client.evals.evaluate(
+        dataset=eval_dataset,
+        metrics=predefined_metrics,
+    )
+
+    assert isinstance(evaluation_result, types.EvaluationResult)
+    assert evaluation_result.summary_metrics is not None
+    assert len(evaluation_result.summary_metrics) > 0
+    for summary in evaluation_result.summary_metrics:
+        assert isinstance(summary, types.AggregatedMetricResult)
+        assert summary.metric_name is not None
+
+    assert evaluation_result.eval_case_results is not None
+    assert len(evaluation_result.eval_case_results) > 0
+    for case_result in evaluation_result.eval_case_results:
+        assert isinstance(case_result, types.EvalCaseResult)
+        assert case_result.eval_case_index is not None
+        assert case_result.response_candidate_results is not None
+
+
 pytestmark = pytest_helper.setup(
     file=__file__,
     globals_for_file=globals(),

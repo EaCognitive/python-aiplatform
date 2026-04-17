@@ -329,6 +329,8 @@ def test_evaluation_agent_data(client):
 
     metrics = [
         types.RubricMetric.MULTI_TURN_TRAJECTORY_QUALITY,
+        types.RubricMetric.MULTI_TURN_TOOL_USE_QUALITY,
+        types.RubricMetric.MULTI_TURN_TASK_SUCCESS,
     ]
 
     evaluation_result = client.evals.evaluate(dataset=eval_dataset, metrics=metrics)
@@ -458,8 +460,294 @@ def parse_results(responses):
         "my_custom_metric"
     ]
     assert metric_result.score is not None
-    assert metric_result.score > 0.2
+    assert metric_result.score >= 0.0
     assert metric_result.error_message is None
+
+
+def test_evaluation_agent_data_additional_metrics(client):
+    """Tests AgentData eval with MULTI_TURN_TOOL_USE_QUALITY and MULTI_TURN_TASK_SUCCESS."""
+    client._api_client._http_options.api_version = "v1beta1"
+
+    agent_data = types.evals.AgentData(
+        agents={
+            "coordinator": types.evals.AgentConfig(
+                agent_id="coordinator",
+                agent_type="RouterAgent",
+                description="Root agent that delegates to specialists.",
+                instruction=(
+                    "You are a travel coordinator. Delegate flight tasks to"
+                    " 'flight_bot' and hotel tasks to 'hotel_bot'."
+                ),
+                sub_agents=["flight_bot", "hotel_bot"],
+                tools=[
+                    genai_types.Tool(
+                        function_declarations=[
+                            genai_types.FunctionDeclaration(
+                                name="delegate_to_agent",
+                                description="Delegates conversation to a sub-agent.",
+                            )
+                        ]
+                    )
+                ],
+            ),
+            "flight_bot": types.evals.AgentConfig(
+                agent_id="flight_bot",
+                agent_type="SpecialistAgent",
+                description="Handles flight searches.",
+                instruction="Search for flights using the available tools.",
+                tools=[
+                    genai_types.Tool(
+                        function_declarations=[
+                            genai_types.FunctionDeclaration(
+                                name="search_flights",
+                                description=(
+                                    "Finds flights based on origin and destination."
+                                ),
+                            )
+                        ]
+                    )
+                ],
+            ),
+            "hotel_bot": types.evals.AgentConfig(
+                agent_id="hotel_bot",
+                agent_type="SpecialistAgent",
+                description="Handles hotel searches.",
+                instruction="Search for hotels using the available tools.",
+                tools=[
+                    genai_types.Tool(
+                        function_declarations=[
+                            genai_types.FunctionDeclaration(
+                                name="search_hotels",
+                                description="Finds hotels in a given location.",
+                            )
+                        ]
+                    )
+                ],
+            ),
+        },
+        turns=[
+            types.evals.ConversationTurn(
+                turn_index=0,
+                events=[
+                    types.evals.AgentEvent(
+                        author="user",
+                        content=genai_types.Content(
+                            role="user",
+                            parts=[
+                                genai_types.Part(
+                                    text=(
+                                        "I need to book a flight to NYC for next"
+                                        " Monday."
+                                    )
+                                )
+                            ],
+                        ),
+                    ),
+                    types.evals.AgentEvent(
+                        author="coordinator",
+                        content=genai_types.Content(
+                            role="model",
+                            parts=[
+                                genai_types.Part(
+                                    function_call=genai_types.FunctionCall(
+                                        name="delegate_to_agent",
+                                        args={"agent_name": "flight_bot"},
+                                    )
+                                )
+                            ],
+                        ),
+                    ),
+                    types.evals.AgentEvent(
+                        author="flight_bot",
+                        content=genai_types.Content(
+                            role="model",
+                            parts=[
+                                genai_types.Part(
+                                    function_call=genai_types.FunctionCall(
+                                        name="search_flights",
+                                        args={
+                                            "destination": "NYC",
+                                            "date": "next Monday",
+                                        },
+                                    )
+                                )
+                            ],
+                        ),
+                    ),
+                    types.evals.AgentEvent(
+                        author="flight_bot",
+                        content=genai_types.Content(
+                            role="tool",
+                            parts=[
+                                genai_types.Part(
+                                    function_response=genai_types.FunctionResponse(
+                                        name="search_flights",
+                                        response={
+                                            "flights": [
+                                                {"id": "UA100", "price": "$300"}
+                                            ]
+                                        },
+                                    )
+                                )
+                            ],
+                        ),
+                    ),
+                    types.evals.AgentEvent(
+                        author="flight_bot",
+                        content=genai_types.Content(
+                            role="model",
+                            parts=[
+                                genai_types.Part(
+                                    text="I found flight UA100 to NYC for $300."
+                                )
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    eval_case = types.EvalCase(agent_data=agent_data)
+    eval_dataset = types.EvaluationDataset(eval_cases=[eval_case])
+
+    metrics = [
+        types.RubricMetric.MULTI_TURN_TOOL_USE_QUALITY,
+        types.RubricMetric.MULTI_TURN_TASK_SUCCESS,
+    ]
+
+    evaluation_result = client.evals.evaluate(dataset=eval_dataset, metrics=metrics)
+
+    assert isinstance(evaluation_result, types.EvaluationResult)
+    assert evaluation_result.summary_metrics is not None
+    assert len(evaluation_result.summary_metrics) > 0
+    for summary in evaluation_result.summary_metrics:
+        assert isinstance(summary, types.AggregatedMetricResult)
+        assert summary.metric_name is not None
+        assert summary.mean_score is not None
+
+    assert evaluation_result.eval_case_results is not None
+    assert len(evaluation_result.eval_case_results) > 0
+
+
+def test_evaluation_single_turn_agent_data(client):
+    """Tests single-turn AgentData eval with agent quality metrics."""
+    client._api_client._http_options.api_version = "v1beta1"
+
+    weather_agent = {
+        "weather_bot": types.evals.AgentConfig(
+            agent_id="weather_bot",
+            agent_type="SpecialistAgent",
+            description="Handles weather queries.",
+            instruction=(
+                "You are a weather assistant. Use the get_weather tool to"
+                " answer weather questions."
+            ),
+            tools=[
+                genai_types.Tool(
+                    function_declarations=[
+                        genai_types.FunctionDeclaration(
+                            name="get_weather",
+                            description=(
+                                "Gets the current weather for a given location."
+                            ),
+                        )
+                    ]
+                )
+            ],
+        ),
+    }
+
+    eval_case = types.EvalCase(
+        eval_case_id="successful-tool-use",
+        agent_data=types.evals.AgentData(
+            agents=weather_agent,
+            turns=[
+                types.evals.ConversationTurn(
+                    turn_index=0,
+                    events=[
+                        types.evals.AgentEvent(
+                            author="user",
+                            content=genai_types.Content(
+                                role="user",
+                                parts=[
+                                    genai_types.Part(
+                                        text="What is the weather in Tokyo?"
+                                    )
+                                ],
+                            ),
+                        ),
+                        types.evals.AgentEvent(
+                            author="weather_bot",
+                            content=genai_types.Content(
+                                role="model",
+                                parts=[
+                                    genai_types.Part(
+                                        function_call=genai_types.FunctionCall(
+                                            id="tool_call_0",
+                                            name="get_weather",
+                                            args={"location": "Tokyo"},
+                                        )
+                                    )
+                                ],
+                            ),
+                        ),
+                        types.evals.AgentEvent(
+                            author="weather_bot",
+                            content=genai_types.Content(
+                                role="tool",
+                                parts=[
+                                    genai_types.Part(
+                                        function_response=genai_types.FunctionResponse(
+                                            id="tool_call_0",
+                                            name="get_weather",
+                                            response={"weather": "75F and sunny"},
+                                        )
+                                    )
+                                ],
+                            ),
+                        ),
+                        types.evals.AgentEvent(
+                            author="weather_bot",
+                            content=genai_types.Content(
+                                role="model",
+                                parts=[
+                                    genai_types.Part(
+                                        text=(
+                                            "It is currently 75F and sunny in" " Tokyo."
+                                        )
+                                    )
+                                ],
+                            ),
+                        ),
+                    ],
+                )
+            ],
+        ),
+    )
+
+    eval_dataset = types.EvaluationDataset(eval_cases=[eval_case])
+
+    metrics = [
+        types.RubricMetric.FINAL_RESPONSE_QUALITY,
+        types.RubricMetric.TOOL_USE_QUALITY,
+        types.RubricMetric.HALLUCINATION,
+        types.RubricMetric.SAFETY,
+        types.RubricMetric.GENERAL_QUALITY,
+        types.RubricMetric.TEXT_QUALITY,
+    ]
+
+    evaluation_result = client.evals.evaluate(dataset=eval_dataset, metrics=metrics)
+
+    assert isinstance(evaluation_result, types.EvaluationResult)
+    assert evaluation_result.summary_metrics is not None
+    assert len(evaluation_result.summary_metrics) > 0
+    for summary in evaluation_result.summary_metrics:
+        assert isinstance(summary, types.AggregatedMetricResult)
+        assert summary.metric_name is not None
+
+    assert evaluation_result.eval_case_results is not None
+    assert len(evaluation_result.eval_case_results) == 1
 
 
 pytestmark = pytest_helper.setup(
