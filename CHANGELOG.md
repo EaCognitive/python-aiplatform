@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.148.2](https://github.com/googleapis/python-aiplatform/compare/v1.148.1...v1.148.2) (2026-04-21)
+
+
+### Bug Fixes
+
+* Unpin litellm upper bound to allow CVE-2026-35030 remediation ([e5e6346](https://github.com/googleapis/python-aiplatform/commit/e5e63464320ca072ae5baa31d9aacfc0a45bff79))
+
 ## [1.148.1](https://github.com/googleapis/python-aiplatform/compare/v1.148.0...v1.148.1) (2026-04-17)
 
 
